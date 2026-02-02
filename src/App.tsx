@@ -23,6 +23,9 @@ import AdminCollegeMatieres from "./pages/admin-college/AdminCollegeMatieres";
 import AdminCollegeEnseignants from "./pages/admin-college/AdminCollegeEnseignants";
 import EnseignantDashboard from "./pages/enseignant/EnseignantDashboard";
 import EnseignantDemandes from "./pages/enseignant/EnseignantDemandes";
+import EnseignantCours from "./pages/enseignant/EnseignantCours";
+import EnseignantNotes from "./pages/enseignant/EnseignantNotes";
+import EnseignantEtudiants from "./pages/enseignant/EnseignantEtudiants";
 import EtudiantDashboard from "./pages/etudiant/EtudiantDashboard";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 
@@ -144,6 +147,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
                   <EnseignantDemandes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/enseignant/cours"
+              element={
+                <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
+                  <EnseignantCours />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/enseignant/notes"
+              element={
+                <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
+                  <EnseignantNotes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/enseignant/etudiants"
+              element={
+                <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
+                  <EnseignantEtudiants />
                 </ProtectedRoute>
               }
             />
