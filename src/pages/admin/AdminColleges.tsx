@@ -74,17 +74,15 @@ export default function AdminColleges() {
           adresse: formData.adresse || undefined,
         });
       } else {
-        // Création: collège + admin
+        // Création: collège + admin (format plat attendu par le backend)
         response = await apiPost<College>('/colleges', {
           nom: formData.nom,
+          adresse: formData.adresse,
           siteWeb: formData.siteWeb || undefined,
-          adresse: formData.adresse || undefined,
-          admin: {
-            email: formData.adminEmail,
-            password: formData.adminPassword,
-            nom: formData.adminNom,
-            prenom: formData.adminPrenom,
-          },
+          adminEmail: formData.adminEmail,
+          adminPassword: formData.adminPassword,
+          adminNom: formData.adminNom,
+          adminPrenom: formData.adminPrenom,
         });
       }
 
