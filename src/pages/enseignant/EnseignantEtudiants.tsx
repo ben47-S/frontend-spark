@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,137 +7,147 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Search, Mail, Phone, GraduationCap } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Users, Search, Mail, Phone, GraduationCap, AlertCircle } from 'lucide-react';
+import { apiGet } from '@/lib/api';
+import type { Salle, Etudiant, AnneeScolaire } from '@/types/api';
 
-// Données simulées
-const mockSalles = [
-  { id: '1', nom: 'Salle A1', college: 'Collège Central' },
-  { id: '2', nom: 'Salle B2', college: 'Collège Central' },
-];
-
-const mockEtudiants = [
-  {
-    id: '1',
-    nom: 'Dupont',
-    prenom: 'Marie',
-    email: 'marie.dupont@email.com',
-    telephone: '0612345678',
-    salleId: '1',
-    salle: { nom: 'Salle A1' },
-    moyenne: 15.5,
-    anneeScolaire: '2024-2025',
-  },
-  {
-    id: '2',
-    nom: 'Martin',
-    prenom: 'Jean',
-    email: 'jean.martin@email.com',
-    telephone: '0623456789',
-    salleId: '1',
-    salle: { nom: 'Salle A1' },
-    moyenne: 12.0,
-    anneeScolaire: '2024-2025',
-  },
-  {
-    id: '3',
-    nom: 'Bernard',
-    prenom: 'Sophie',
-    email: 'sophie.bernard@email.com',
-    telephone: '0634567890',
-    salleId: '2',
-    salle: { nom: 'Salle B2' },
-    moyenne: 14.2,
-    anneeScolaire: '2024-2025',
-  },
-  {
-    id: '4',
-    nom: 'Petit',
-    prenom: 'Lucas',
-    email: 'lucas.petit@email.com',
-    telephone: '0645678901',
-    salleId: '1',
-    salle: { nom: 'Salle A1' },
-    moyenne: 18.0,
-    anneeScolaire: '2024-2025',
-  },
-  {
-    id: '5',
-    nom: 'Robert',
-    prenom: 'Emma',
-    email: 'emma.robert@email.com',
-    telephone: '0656789012',
-    salleId: '2',
-    salle: { nom: 'Salle B2' },
-    moyenne: 9.5,
-    anneeScolaire: '2024-2025',
-  },
-];
+interface InscriptionWithDetails {
+  id: string;
+  etudiant: Etudiant & { user?: { email: string } };
+  salle: Salle;
+  anneeScolaire: AnneeScolaire;
+}
 
 export default function EnseignantEtudiants() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSalle, setFilterSalle] = useState('all');
 
-  const filteredEtudiants = mockEtudiants.filter(etudiant => {
+  // Récupérer les salles de l'enseignant
+  const { data: sallesData, isLoading: sallesLoading } = useQuery({
+    queryKey: ['enseignant-salles'],
+    queryFn: async () => {
+      const response = await apiGet<Salle[]>('/salles');
+      return response.data || [];
+    },
+  });
+
+  // Récupérer les inscriptions (étudiants dans les salles)
+  const { data: inscriptionsData, isLoading: inscriptionsLoading } = useQuery({
+    queryKey: ['enseignant-inscriptions'],
+    queryFn: async () => {
+      const response = await apiGet<InscriptionWithDetails[]>('/inscriptions?statut=ACCEPTE');
+      return response.data || [];
+    },
+  });
+
+  const salles = sallesData || [];
+  const inscriptions = inscriptionsData || [];
+
+  // Transformer les inscriptions en liste d'étudiants
+  const etudiants = inscriptions
+    .filter(insc => insc.etudiant && insc.salle)
+    .map(insc => ({
+      id: insc.etudiant!.id,
+      nom: insc.etudiant!.nom,
+      prenom: insc.etudiant!.prenom,
+      email: insc.etudiant!.user?.email || '',
+      telephone: insc.etudiant!.telephone,
+      salleId: insc.salle!.id,
+      salle: { id: insc.salle!.id, numero: insc.salle!.numero },
+      anneeScolaire: insc.anneeScolaire?.libelle || '',
+    }));
+
+  const filteredEtudiants = etudiants.filter(etudiant => {
     const matchesSearch = 
       etudiant.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       etudiant.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      etudiant.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (etudiant.email && etudiant.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesSalle = filterSalle === 'all' || etudiant.salleId === filterSalle;
     return matchesSearch && matchesSalle;
   });
 
-  const getMoyenneColor = (moyenne: number) => {
-    if (moyenne >= 16) return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-    if (moyenne >= 12) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-    if (moyenne >= 10) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-  };
-
   const getInitials = (prenom: string, nom: string) => {
-    return `${prenom[0]}${nom[0]}`.toUpperCase();
+    return `${prenom[0] || ''}${nom[0] || ''}`.toUpperCase();
   };
 
   // Stats par salle
-  const statsBySalle = mockSalles.map(salle => {
-    const etudiantsSalle = mockEtudiants.filter(e => e.salleId === salle.id);
-    const moyenneSalle = etudiantsSalle.length > 0 
-      ? etudiantsSalle.reduce((acc, e) => acc + e.moyenne, 0) / etudiantsSalle.length
-      : 0;
+  const statsBySalle = salles.map(salle => {
+    const etudiantsSalle = etudiants.filter(e => e.salleId === salle.id);
     return {
       ...salle,
       nbEtudiants: etudiantsSalle.length,
-      moyenne: moyenneSalle.toFixed(1),
     };
   });
+
+  const isLoading = sallesLoading || inscriptionsLoading;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-12" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Mes étudiants</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Étudiants par salle</h1>
           <p className="text-muted-foreground">
-            Consultez la liste des étudiants dans vos classes
+            Consultez la liste des étudiants inscrits dans chaque salle
           </p>
         </div>
 
         {/* Stats par salle */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {statsBySalle.map((salle) => (
-            <Card key={salle.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{salle.nom}</CardTitle>
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{salle.nbEtudiants}</div>
-                <p className="text-xs text-muted-foreground">
-                  Moyenne: {salle.moyenne}/20
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {statsBySalle.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {statsBySalle.map((salle) => (
+              <Card 
+                key={salle.id} 
+                className={`cursor-pointer transition-colors hover:border-primary ${filterSalle === salle.id ? 'border-primary bg-primary/5' : ''}`}
+                onClick={() => setFilterSalle(filterSalle === salle.id ? 'all' : salle.id)}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Salle {salle.numero}</CardTitle>
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{salle.nbEtudiants}</div>
+                  <p className="text-xs text-muted-foreground">
+                    étudiant{salle.nbEtudiants > 1 ? 's' : ''} inscrit{salle.nbEtudiants > 1 ? 's' : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <AlertCircle className="h-12 w-12 text-muted-foreground opacity-50" />
+              <p className="mt-4 text-muted-foreground">Aucune salle disponible</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filtres */}
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -155,8 +166,8 @@ export default function EnseignantEtudiants() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes les salles</SelectItem>
-              {mockSalles.map(salle => (
-                <SelectItem key={salle.id} value={salle.id}>{salle.nom}</SelectItem>
+              {salles.map(salle => (
+                <SelectItem key={salle.id} value={salle.id}>Salle {salle.numero}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -178,6 +189,11 @@ export default function EnseignantEtudiants() {
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Users className="h-12 w-12 opacity-50" />
                 <p className="mt-4">Aucun étudiant trouvé</p>
+                <p className="text-sm">
+                  {etudiants.length === 0 
+                    ? "Aucun étudiant n'est inscrit dans les salles" 
+                    : "Essayez de modifier vos filtres"}
+                </p>
               </div>
             ) : (
               <Table>
@@ -186,7 +202,7 @@ export default function EnseignantEtudiants() {
                     <TableHead>Étudiant</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Salle</TableHead>
-                    <TableHead className="text-center">Moyenne</TableHead>
+                    <TableHead>Année scolaire</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -203,33 +219,35 @@ export default function EnseignantEtudiants() {
                             <p className="font-medium">
                               {etudiant.prenom} {etudiant.nom}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {etudiant.anneeScolaire}
-                            </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-muted-foreground">{etudiant.email}</span>
-                          </div>
+                          {etudiant.email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">{etudiant.email}</span>
+                            </div>
+                          )}
                           {etudiant.telephone && (
                             <div className="flex items-center gap-2 text-sm">
                               <Phone className="h-3 w-3 text-muted-foreground" />
                               <span className="text-muted-foreground">{etudiant.telephone}</span>
                             </div>
                           )}
+                          {!etudiant.email && !etudiant.telephone && (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{etudiant.salle.nom}</Badge>
+                        <Badge variant="outline">Salle {etudiant.salle.numero}</Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={getMoyenneColor(etudiant.moyenne)}>
-                          {etudiant.moyenne.toFixed(1)}/20
-                        </Badge>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {etudiant.anneeScolaire || '-'}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}
