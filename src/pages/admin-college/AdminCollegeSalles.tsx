@@ -24,6 +24,11 @@ const initialForm: SalleForm = {
   departementId: '',
 };
 
+interface AdminCollegeProfil {
+  id: string;
+  collegeId: string;
+}
+
 export default function AdminCollegeSalles() {
   const { toast } = useToast();
   const [salles, setSalles] = useState<Salle[]>([]);
@@ -33,6 +38,20 @@ export default function AdminCollegeSalles() {
   const [formData, setFormData] = useState<SalleForm>(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [collegeId, setCollegeId] = useState<string | null>(null);
+
+  const fetchAdminProfil = async () => {
+    try {
+      const response = await apiGet<AdminCollegeProfil>('/admin-college/me');
+      if (response.success && response.data) {
+        setCollegeId(response.data.collegeId);
+        return response.data.collegeId;
+      }
+    } catch (err) {
+      console.error('Erreur récupération profil admin:', err);
+    }
+    return null;
+  };
 
   const fetchData = async () => {
     try {
@@ -55,17 +74,32 @@ export default function AdminCollegeSalles() {
   };
 
   useEffect(() => {
-    fetchData();
+    const init = async () => {
+      await fetchAdminProfil();
+      await fetchData();
+    };
+    init();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
+    if (!collegeId) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de récupérer votre collège',
+      });
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         numero: formData.numero,
         nbPlaces: parseInt(formData.nbPlaces),
+        collegeId,
         departementId: formData.departementId || undefined,
       };
 
