@@ -120,9 +120,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar Desktop */}
-      <aside className="hidden w-64 flex-shrink-0 border-r bg-card lg:block">
-        <div className="flex h-full flex-col">
+      {/* Sidebar Desktop - Fixed */}
+      <aside className="hidden w-64 flex-shrink-0 lg:block">
+        <div className="fixed top-0 left-0 h-screen w-64 flex flex-col border-r bg-card">
           {/* Logo */}
           <div className="flex h-16 items-center gap-2 border-b px-6">
             <GraduationCap className="h-8 w-8 text-primary" />
@@ -134,8 +134,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavLinks />
           </div>
 
-          {/* Settings */}
-          <div className="border-t p-4">
+          {/* Settings & Logout */}
+          <div className="border-t p-4 space-y-1">
             <Link
               to="/settings"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -143,6 +143,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Settings className="h-4 w-4" />
               Paramètres
             </Link>
+            <button
+              onClick={logout}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </button>
           </div>
         </div>
       </aside>
@@ -158,13 +165,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-64 p-0 flex flex-col">
               <div className="flex h-16 items-center gap-2 border-b px-6">
                 <GraduationCap className="h-8 w-8 text-primary" />
                 <span className="text-lg font-bold">UICI Academy</span>
               </div>
-              <div className="px-4 py-4">
+              <div className="flex-1 overflow-y-auto px-4 py-4">
                 <NavLinks onItemClick={() => setIsMobileMenuOpen(false)} />
+              </div>
+              {/* Mobile Logout */}
+              <div className="border-t p-4">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Déconnexion
+                </button>
               </div>
             </SheetContent>
           </Sheet>
