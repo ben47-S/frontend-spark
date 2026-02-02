@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { apiGet } from '@/lib/api';
 import {
   GraduationCap,
   Menu,
@@ -28,6 +30,7 @@ import {
   Home,
   BookMarked,
   Calendar,
+  School,
   type LucideIcon,
 } from 'lucide-react';
 import type { Role } from '@/types/api';
@@ -61,7 +64,6 @@ const navItemsByRole: Record<Role, NavItem[]> = {
   ],
   ETUDIANT: [
     { label: 'Dashboard', href: '/etudiant', icon: LayoutDashboard },
-    { label: 'Mes notes', href: '/etudiant/notes', icon: FileText },
     { label: 'Inscription', href: '/etudiant/inscription', icon: ClipboardList },
   ],
   PARENT: [
@@ -71,6 +73,15 @@ const navItemsByRole: Record<Role, NavItem[]> = {
   ],
 };
 
+// Onglets supplémentaires pour étudiant inscrit (ACCEPTE)
+const etudiantAcceptedItems: NavItem[] = [
+  { label: 'Mon école', href: '/etudiant/ecole', icon: School },
+  { label: 'Mes matières', href: '/etudiant/matieres', icon: BookMarked },
+  { label: 'Mes cours', href: '/etudiant/cours', icon: BookOpen },
+  { label: 'Ma classe', href: '/etudiant/classe', icon: Users },
+  { label: 'Mes notes', href: '/etudiant/notes', icon: FileText },
+];
+
 const roleLabels: Record<Role, string> = {
   ADMIN_GLOBAL: 'Administrateur Global',
   ADMIN_COLLEGE: 'Administrateur Collège',
@@ -78,6 +89,10 @@ const roleLabels: Record<Role, string> = {
   ETUDIANT: 'Étudiant',
   PARENT: 'Parent',
 };
+
+interface InscriptionStatus {
+  statut: 'EN_ATTENTE' | 'ACCEPTE' | 'REFUSE';
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -88,9 +103,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Récupérer le statut d'inscription pour les étudiants
+  const { data: inscriptionData } = useQuery({
+    queryKey: ['etudiant-inscription-status'],
+    queryFn: async () => {
+      const response = await apiGet<InscriptionStatus[]>('/inscriptions/me');
+      if (response.success && response.data && response.data.length > 0) {
+        return response.data[0];
+      }
+      return null;
+    },
+    enabled: user?.role === 'ETUDIANT',
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (!user) return null;
 
-  const navItems = navItemsByRole[user.role] || [];
+  // Déterminer les items de navigation
+  let navItems = navItemsByRole[user.role] || [];
+  
+  // Pour les étudiants, ajouter les onglets conditionnellement
+  if (user.role === 'ETUDIANT' && inscriptionData?.statut === 'ACCEPTE') {
+    navItems = [
+      { label: 'Dashboard', href: '/etudiant', icon: LayoutDashboard },
+      { label: 'Inscription', href: '/etudiant/inscription', icon: ClipboardList },
+      ...etudiantAcceptedItems,
+    ];
+  }
+
   const userInitials = user.email.substring(0, 2).toUpperCase();
 
   const NavLinks = ({ onItemClick }: { onItemClick?: () => void }) => (
