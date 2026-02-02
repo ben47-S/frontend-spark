@@ -12,6 +12,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, GraduationCap } from 'lucide-react';
 import type { Departement } from '@/types/api';
 
+interface AdminCollegeProfil {
+  id: string;
+  collegeId: string;
+}
+
 interface DepartementForm {
   nom: string;
 }
@@ -28,6 +33,20 @@ export default function AdminCollegeDepartements() {
   const [formData, setFormData] = useState<DepartementForm>(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [collegeId, setCollegeId] = useState<string | null>(null);
+
+  const fetchAdminProfil = async () => {
+    try {
+      const response = await apiGet<AdminCollegeProfil>('/admin-college/me');
+      if (response.success && response.data) {
+        setCollegeId(response.data.collegeId);
+        return response.data.collegeId;
+      }
+    } catch (err) {
+      console.error('Erreur récupération profil admin:', err);
+    }
+    return null;
+  };
 
   const fetchDepartements = async () => {
     try {
@@ -43,17 +62,36 @@ export default function AdminCollegeDepartements() {
   };
 
   useEffect(() => {
-    fetchDepartements();
+    const init = async () => {
+      await fetchAdminProfil();
+      await fetchDepartements();
+    };
+    init();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
+    if (!collegeId) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de récupérer votre collège',
+      });
+      setSubmitting(false);
+      return;
+    }
+
     try {
+      const payload = {
+        nom: formData.nom,
+        collegeId,
+      };
+
       const response = editingId
-        ? await apiPatch<Departement>(`/departements/${editingId}`, formData)
-        : await apiPost<Departement>('/departements', formData);
+        ? await apiPatch<Departement>(`/departements/${editingId}`, payload)
+        : await apiPost<Departement>('/departements', payload);
 
       if (response.success) {
         toast({
