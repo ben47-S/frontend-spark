@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth, getDefaultRoute } from '@/contexts/AuthContext';
-import { apiGet, apiPost } from '@/lib/api';
+import { apiPost } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, GraduationCap, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react';
-import type { College, Departement } from '@/types/api';
 
 interface RegisterFormData {
   email: string;
@@ -18,14 +16,11 @@ interface RegisterFormData {
   nom: string;
   prenom: string;
   telephone: string;
-  collegeId: string;
-  departementId: string;
   datePriseFonction: string;
 }
 
 export default function RegisterEnseignant() {
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
   
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
@@ -34,52 +29,11 @@ export default function RegisterEnseignant() {
     nom: '',
     prenom: '',
     telephone: '',
-    collegeId: '',
-    departementId: '',
     datePriseFonction: new Date().toISOString().split('T')[0],
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [departements, setDepartements] = useState<Departement[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
-
-  useEffect(() => {
-    const fetchColleges = async () => {
-      try {
-        const response = await apiGet<College[]>('/colleges', { requiresAuth: false });
-        if (response.success && response.data) {
-          setColleges(response.data);
-        }
-      } catch (err) {
-        console.error('Erreur chargement collèges:', err);
-      } finally {
-        setLoadingData(false);
-      }
-    };
-    fetchColleges();
-  }, []);
-
-  // Charger les départements quand un collège est sélectionné
-  useEffect(() => {
-    if (formData.collegeId) {
-      const fetchDepartements = async () => {
-        try {
-          const response = await apiGet<Departement[]>(`/colleges/${formData.collegeId}/departements`, { requiresAuth: false });
-          if (response.success && response.data) {
-            setDepartements(response.data);
-          }
-        } catch (err) {
-          console.error('Erreur chargement départements:', err);
-        }
-      };
-      fetchDepartements();
-    } else {
-      setDepartements([]);
-    }
-  }, [formData.collegeId]);
 
   // Rediriger si déjà connecté
   if (!authLoading && isAuthenticated && user) {
@@ -104,10 +58,6 @@ export default function RegisterEnseignant() {
       setError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
-    if (!formData.collegeId) {
-      setError('Veuillez sélectionner un collège');
-      return;
-    }
 
     setIsLoading(true);
 
@@ -118,8 +68,6 @@ export default function RegisterEnseignant() {
         nom: formData.nom,
         prenom: formData.prenom,
         telephone: formData.telephone || undefined,
-        collegeId: formData.collegeId,
-        departementId: formData.departementId || undefined,
         datePriseFonction: new Date(formData.datePriseFonction).toISOString(),
       }, { requiresAuth: false });
 
@@ -143,9 +91,9 @@ export default function RegisterEnseignant() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
               <CheckCircle className="h-8 w-8 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl font-bold text-primary">Inscription réussie !</CardTitle>
+            <CardTitle className="text-2xl font-bold">Compte créé !</CardTitle>
             <CardDescription>
-              Votre compte enseignant a été créé. Vous pouvez maintenant vous connecter.
+              Votre compte enseignant a été créé. Connectez-vous pour accéder à votre espace.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -167,7 +115,7 @@ export default function RegisterEnseignant() {
           </div>
           <CardTitle className="text-2xl font-bold">Inscription Enseignant</CardTitle>
           <CardDescription>
-            Créez votre compte enseignant pour rejoindre un établissement
+            Créez votre compte enseignant pour UICI Academy
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -230,48 +178,6 @@ export default function RegisterEnseignant() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="college">Collège</Label>
-              <Select
-                value={formData.collegeId}
-                onValueChange={(value) => handleChange('collegeId', value)}
-                disabled={isLoading || loadingData}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez un collège" />
-                </SelectTrigger>
-                <SelectContent>
-                  {colleges.map((college) => (
-                    <SelectItem key={college.id} value={college.id}>
-                      {college.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {departements.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor="departement">Département (optionnel)</Label>
-                <Select
-                  value={formData.departementId}
-                  onValueChange={(value) => handleChange('departementId', value)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un département" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departements.map((dep) => (
-                      <SelectItem key={dep.id} value={dep.id}>
-                        {dep.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="space-y-2">
               <Label htmlFor="datePriseFonction">Date de prise de fonction</Label>
               <Input
                 id="datePriseFonction"
@@ -309,7 +215,7 @@ export default function RegisterEnseignant() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading || loadingData}>
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -320,6 +226,12 @@ export default function RegisterEnseignant() {
               )}
             </Button>
           </form>
+
+          <div className="mt-4 rounded-lg border bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">
+              Après la création de votre compte, vous pourrez être assigné à un collège et département par un administrateur.
+            </p>
+          </div>
 
           <div className="mt-6 text-center">
             <Link
