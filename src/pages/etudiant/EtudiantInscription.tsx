@@ -25,9 +25,9 @@ export default function EtudiantInscription() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [collegesRes, anneeRes, inscriptionsRes] = await Promise.all([
+        const [collegesRes, anneesRes, inscriptionsRes] = await Promise.all([
           apiGet<College[]>('/colleges', { requiresAuth: false }),
-          apiGet<AnneeScolaire>('/annees-scolaires/active'),
+          apiGet<AnneeScolaire[]>('/annees'),
           apiGet<Inscription[]>('/inscriptions'),
         ]);
 
@@ -39,15 +39,18 @@ export default function EtudiantInscription() {
           setAllInscriptions(inscriptionsRes.data);
         }
 
-        if (anneeRes.success && anneeRes.data) {
-          setAnneeScolaire(anneeRes.data);
-          
-          if (inscriptionsRes.success && inscriptionsRes.data) {
-            const existing = inscriptionsRes.data.find(
-              (i) => i.anneeScolaireId === anneeRes.data.id
-            );
-            if (existing) {
-              setExistingInscription(existing);
+        if (anneesRes.success && anneesRes.data) {
+          const activeAnnee = anneesRes.data.find((a) => a.estActive);
+          if (activeAnnee) {
+            setAnneeScolaire(activeAnnee);
+            
+            if (inscriptionsRes.success && inscriptionsRes.data) {
+              const existing = inscriptionsRes.data.find(
+                (i) => i.anneeScolaireId === activeAnnee.id
+              );
+              if (existing) {
+                setExistingInscription(existing);
+              }
             }
           }
         }
