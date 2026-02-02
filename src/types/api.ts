@@ -88,11 +88,13 @@ export interface Departement {
   id: string;
   nom: string;
   collegeId: string;
+  adminEnseignantId?: string;
   createdAt: string;
   college?: {
     id: string;
     nom: string;
   };
+  adminEnseignant?: Enseignant;
   _count?: {
     matieres: number;
     enseignantDepartements: number;
@@ -102,14 +104,16 @@ export interface Departement {
 // Salle
 export interface Salle {
   id: string;
-  nom: string;
-  capacite?: number;
+  numero: string;
+  nbPlaces: number;
   collegeId: string;
+  departementId?: string;
   createdAt: string;
   college?: {
     id: string;
     nom: string;
   };
+  departement?: Departement;
   _count?: {
     inscriptions: number;
     cours: number;
@@ -186,10 +190,11 @@ export interface ReponseInscriptionRequest {
 export interface Matiere {
   id: string;
   nom: string;
-  coefficient: number;
   departementId: string;
+  salleId?: string;
   createdAt: string;
   departement?: Departement;
+  salle?: Salle;
 }
 
 // Note

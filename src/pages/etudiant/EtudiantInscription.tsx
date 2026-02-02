@@ -199,7 +199,7 @@ export default function EtudiantInscription() {
                         Inscription confirmée !
                       </p>
                       <p className="text-green-700 dark:text-green-500">
-                        Salle : <span className="font-medium">{existingInscription.salle.nom}</span>
+                        Salle : <span className="font-medium">{existingInscription.salle.numero}</span>
                       </p>
                       {existingInscription.salle.college && (
                         <p className="text-sm text-green-600 dark:text-green-500">
@@ -320,11 +320,11 @@ export default function EtudiantInscription() {
                   >
                     <div>
                       <p className="font-medium">{inscription.anneeScolaire?.libelle}</p>
-                      {inscription.salle && (
-                        <p className="text-sm text-muted-foreground">
-                          {inscription.salle.nom} - {inscription.salle.college?.nom}
-                        </p>
-                      )}
+                    {inscription.salle && (
+                      <p className="text-sm text-muted-foreground">
+                        {inscription.salle.numero} - {inscription.salle.college?.nom}
+                      </p>
+                    )}
                     </div>
                     {getStatusBadge(inscription.statut)}
                   </div>
