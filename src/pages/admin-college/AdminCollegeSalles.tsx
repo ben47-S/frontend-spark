@@ -102,9 +102,9 @@ export default function AdminCollegeSalles() {
 
   const handleEdit = (salle: Salle) => {
     setFormData({
-      numero: salle.nom, // Le schema utilise 'numero' mais le type actuel a 'nom'
-      nbPlaces: String(salle.capacite || ''),
-      departementId: (salle as any).departementId || '',
+      numero: salle.numero,
+      nbPlaces: String(salle.nbPlaces || ''),
+      departementId: salle.departementId || '',
     });
     setEditingId(salle.id);
     setDialogOpen(true);
@@ -241,15 +241,15 @@ export default function AdminCollegeSalles() {
                 <TableBody>
                   {salles.map((salle) => (
                     <TableRow key={salle.id}>
-                      <TableCell className="font-medium">{salle.nom}</TableCell>
+                      <TableCell className="font-medium">{salle.numero}</TableCell>
                       <TableCell>
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {salle.capacite} places
+                          {salle.nbPlaces} places
                         </span>
                       </TableCell>
                       <TableCell>
-                        {(salle as any).departement?.nom || '-'}
+                        {salle.departement?.nom || '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

@@ -361,7 +361,7 @@ export default function AdminInscriptions() {
                           {inscription.salle ? (
                             <div className="flex items-center gap-1">
                               <Building className="h-4 w-4 text-muted-foreground" />
-                              {inscription.salle.nom}
+                              {inscription.salle.numero}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -443,9 +443,9 @@ export default function AdminInscriptions() {
                         <SelectItem key={salle.id} value={salle.id}>
                           <div className="flex items-center gap-2">
                             <Building className="h-4 w-4 text-muted-foreground" />
-                            {salle.nom}
-                            {salle.capacite && (
-                              <span className="text-muted-foreground">({salle.capacite} places)</span>
+                            {salle.numero}
+                            {salle.nbPlaces && (
+                              <span className="text-muted-foreground">({salle.nbPlaces} places)</span>
                             )}
                           </div>
                         </SelectItem>

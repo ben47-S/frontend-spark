@@ -11,22 +11,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Plus, Pencil, Trash2, BookMarked } from 'lucide-react';
-import type { Matiere, Departement } from '@/types/api';
+import type { Matiere, Departement, Salle } from '@/types/api';
 
 interface MatiereForm {
   nom: string;
   departementId: string;
+  salleId: string;
 }
 
 const initialForm: MatiereForm = {
   nom: '',
   departementId: '',
+  salleId: '',
 };
 
 export default function AdminCollegeMatieres() {
   const { toast } = useToast();
   const [matieres, setMatieres] = useState<Matiere[]>([]);
   const [departements, setDepartements] = useState<Departement[]>([]);
+  const [salles, setSalles] = useState<Salle[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState<MatiereForm>(initialForm);
@@ -35,9 +38,10 @@ export default function AdminCollegeMatieres() {
 
   const fetchData = async () => {
     try {
-      const [matieresRes, departementsRes] = await Promise.all([
+      const [matieresRes, departementsRes, sallesRes] = await Promise.all([
         apiGet<Matiere[]>('/matieres'),
         apiGet<Departement[]>('/departements'),
+        apiGet<Salle[]>('/salles'),
       ]);
       
       if (matieresRes.success && matieresRes.data) {
@@ -45,6 +49,9 @@ export default function AdminCollegeMatieres() {
       }
       if (departementsRes.success && departementsRes.data) {
         setDepartements(departementsRes.data);
+      }
+      if (sallesRes.success && sallesRes.data) {
+        setSalles(sallesRes.data);
       }
     } catch (err) {
       console.error('Erreur:', err);
@@ -62,9 +69,15 @@ export default function AdminCollegeMatieres() {
     setSubmitting(true);
 
     try {
+      const payload = {
+        nom: formData.nom,
+        departementId: formData.departementId,
+        salleId: formData.salleId || undefined,
+      };
+
       const response = editingId
-        ? await apiPatch<Matiere>(`/matieres/${editingId}`, formData)
-        : await apiPost<Matiere>('/matieres', formData);
+        ? await apiPatch<Matiere>(`/matieres/${editingId}`, payload)
+        : await apiPost<Matiere>('/matieres', payload);
 
       if (response.success) {
         toast({
@@ -97,6 +110,7 @@ export default function AdminCollegeMatieres() {
     setFormData({
       nom: matiere.nom,
       departementId: matiere.departementId,
+      salleId: matiere.salleId || '',
     });
     setEditingId(matiere.id);
     setDialogOpen(true);
@@ -177,6 +191,25 @@ export default function AdminCollegeMatieres() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="salle">Salle (optionnel)</Label>
+                    <Select
+                      value={formData.salleId}
+                      onValueChange={(value) => setFormData({ ...formData, salleId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Aucune salle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Aucune</SelectItem>
+                        {salles.map((salle) => (
+                          <SelectItem key={salle.id} value={salle.id}>
+                            {salle.numero}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={submitting || !formData.departementId}>
@@ -224,6 +257,7 @@ export default function AdminCollegeMatieres() {
                   <TableRow>
                     <TableHead>Nom</TableHead>
                     <TableHead>Département</TableHead>
+                    <TableHead>Salle</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -235,6 +269,9 @@ export default function AdminCollegeMatieres() {
                         <Badge variant="outline">
                           {matiere.departement?.nom || 'Non assigné'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {matiere.salle?.numero || '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
