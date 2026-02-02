@@ -2,7 +2,7 @@
 
 import type { ApiResponse, AuthTokens } from '@/types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002/api';
 
 // Storage keys
 const ACCESS_TOKEN_KEY = 'uici_access_token';
