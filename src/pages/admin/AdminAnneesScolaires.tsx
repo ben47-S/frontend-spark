@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Plus, Pencil, Trash2, Calendar, CheckCircle } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Calendar, CheckCircle, DoorOpen, DoorClosed } from 'lucide-react';
 import type { AnneeScolaire } from '@/types/api';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -107,8 +107,8 @@ export default function AdminAnneesScolaires() {
       libelle: annee.libelle,
       dateDebut: annee.dateDebut.split('T')[0],
       dateFin: annee.dateFin.split('T')[0],
-      dateOuvertureInscriptions: (annee as any).dateOuvertureInscriptions?.split('T')[0] || '',
-      dateFermetureInscriptions: (annee as any).dateFermetureInscriptions?.split('T')[0] || '',
+      dateOuvertureInscriptions: annee.dateOuvertureInscriptions?.split('T')[0] || '',
+      dateFermetureInscriptions: annee.dateFermetureInscriptions?.split('T')[0] || '',
     });
     setEditingId(annee.id);
     setDialogOpen(true);
@@ -150,6 +150,16 @@ export default function AdminAnneesScolaires() {
     } catch {
       return dateString;
     }
+  };
+
+  const isInscriptionOuverte = (annee: AnneeScolaire): boolean => {
+    if (!annee.dateOuvertureInscriptions || !annee.dateFermetureInscriptions) {
+      return false;
+    }
+    const now = new Date();
+    const ouverture = new Date(annee.dateOuvertureInscriptions);
+    const fermeture = new Date(annee.dateFermetureInscriptions);
+    return now >= ouverture && now <= fermeture;
   };
 
   return (
@@ -285,11 +295,24 @@ export default function AdminAnneesScolaires() {
                         {formatDate(annee.dateDebut)} - {formatDate(annee.dateFin)}
                       </TableCell>
                       <TableCell>
-                        {(annee as any).dateOuvertureInscriptions && (
-                          <span className="text-sm text-muted-foreground">
-                            {formatDate((annee as any).dateOuvertureInscriptions)} - {formatDate((annee as any).dateFermetureInscriptions)}
-                          </span>
-                        )}
+                        <div className="space-y-1">
+                          {annee.dateOuvertureInscriptions && (
+                            <span className="text-sm text-muted-foreground block">
+                              {formatDate(annee.dateOuvertureInscriptions)} - {formatDate(annee.dateFermetureInscriptions!)}
+                            </span>
+                          )}
+                          {isInscriptionOuverte(annee) ? (
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                              <DoorOpen className="mr-1 h-3 w-3" />
+                              Ouvertes
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-muted text-muted-foreground">
+                              <DoorClosed className="mr-1 h-3 w-3" />
+                              Fermées
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                       {annee.estActive ? (

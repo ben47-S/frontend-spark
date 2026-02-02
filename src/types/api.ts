@@ -72,6 +72,8 @@ export interface AnneeScolaire {
   libelle: string;
   dateDebut: string;
   dateFin: string;
+  dateOuvertureInscriptions?: string;
+  dateFermetureInscriptions?: string;
   estActive: boolean;
   createdAt: string;
   _count?: {
