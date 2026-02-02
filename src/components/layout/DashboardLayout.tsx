@@ -26,6 +26,8 @@ import {
   FileText,
   Settings,
   Home,
+  BookMarked,
+  Calendar,
   type LucideIcon,
 } from 'lucide-react';
 import type { Role } from '@/types/api';
@@ -40,17 +42,14 @@ const navItemsByRole: Record<Role, NavItem[]> = {
   ADMIN_GLOBAL: [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Collèges', href: '/admin/colleges', icon: Building2 },
-    { label: 'Départements', href: '/admin/departements', icon: BookOpen },
-    { label: 'Enseignants', href: '/admin/enseignants', icon: Users },
-    { label: 'Étudiants', href: '/admin/etudiants', icon: Users },
+    { label: 'Années scolaires', href: '/admin/annees-scolaires', icon: Calendar },
     { label: 'Inscriptions', href: '/admin/inscriptions', icon: ClipboardList },
-    { label: 'Années scolaires', href: '/admin/annees-scolaires', icon: FileText },
   ],
   ADMIN_COLLEGE: [
     { label: 'Dashboard', href: '/admin-college', icon: LayoutDashboard },
     { label: 'Départements', href: '/admin-college/departements', icon: BookOpen },
+    { label: 'Matières', href: '/admin-college/matieres', icon: BookMarked },
     { label: 'Enseignants', href: '/admin-college/enseignants', icon: Users },
-    { label: 'Étudiants', href: '/admin-college/etudiants', icon: Users },
     { label: 'Inscriptions', href: '/admin-college/inscriptions', icon: ClipboardList },
     { label: 'Salles', href: '/admin-college/salles', icon: Home },
   ],

@@ -6,13 +6,21 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-// Pages
+// Pages publiques
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import RegisterEnseignant from "./pages/RegisterEnseignant";
 import NotFound from "./pages/NotFound";
 
 // Dashboards par rôle
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminAnneesScolaires from "./pages/admin/AdminAnneesScolaires";
+import AdminColleges from "./pages/admin/AdminColleges";
 import AdminCollegeDashboard from "./pages/admin-college/AdminCollegeDashboard";
+import AdminCollegeSalles from "./pages/admin-college/AdminCollegeSalles";
+import AdminCollegeDepartements from "./pages/admin-college/AdminCollegeDepartements";
+import AdminCollegeMatieres from "./pages/admin-college/AdminCollegeMatieres";
+import AdminCollegeEnseignants from "./pages/admin-college/AdminCollegeEnseignants";
 import EnseignantDashboard from "./pages/enseignant/EnseignantDashboard";
 import EtudiantDashboard from "./pages/etudiant/EtudiantDashboard";
 import ParentDashboard from "./pages/parent/ParentDashboard";
@@ -33,6 +41,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/register/enseignant" element={<RegisterEnseignant />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
 
             {/* Admin Global routes */}
@@ -41,6 +51,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['ADMIN_GLOBAL']}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/annees-scolaires"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_GLOBAL']}>
+                  <AdminAnneesScolaires />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/colleges"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_GLOBAL']}>
+                  <AdminColleges />
                 </ProtectedRoute>
               }
             />
@@ -59,6 +85,38 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['ADMIN_COLLEGE']}>
                   <AdminCollegeDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-college/salles"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_COLLEGE']}>
+                  <AdminCollegeSalles />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-college/departements"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_COLLEGE']}>
+                  <AdminCollegeDepartements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-college/matieres"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_COLLEGE']}>
+                  <AdminCollegeMatieres />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-college/enseignants"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN_COLLEGE']}>
+                  <AdminCollegeEnseignants />
                 </ProtectedRoute>
               }
             />
