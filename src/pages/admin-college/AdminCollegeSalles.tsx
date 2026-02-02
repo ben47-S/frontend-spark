@@ -85,21 +85,11 @@ export default function AdminCollegeSalles() {
     e.preventDefault();
     setSubmitting(true);
 
-    if (!collegeId) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de récupérer votre collège',
-      });
-      setSubmitting(false);
-      return;
-    }
-
     try {
+      // Le backend gère automatiquement le collegeId depuis le profil admin
       const payload = {
         numero: formData.numero,
         nbPlaces: parseInt(formData.nbPlaces),
-        collegeId,
         departementId: formData.departementId || undefined,
       };
 
