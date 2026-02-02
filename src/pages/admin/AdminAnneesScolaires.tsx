@@ -42,7 +42,7 @@ export default function AdminAnneesScolaires() {
 
   const fetchAnnees = async () => {
     try {
-      const response = await apiGet<AnneeScolaire[]>('/annees-scolaires');
+      const response = await apiGet<AnneeScolaire[]>('/annees');
       if (response.success && response.data) {
         setAnnees(response.data);
       }
@@ -72,8 +72,8 @@ export default function AdminAnneesScolaires() {
       };
 
       const response = editingId
-        ? await apiPatch<AnneeScolaire>(`/annees-scolaires/${editingId}`, payload)
-        : await apiPost<AnneeScolaire>('/annees-scolaires', payload);
+        ? await apiPatch<AnneeScolaire>(`/annees/${editingId}`, payload)
+        : await apiPost<AnneeScolaire>('/annees', payload);
 
       if (response.success) {
         toast({
@@ -117,7 +117,7 @@ export default function AdminAnneesScolaires() {
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette année scolaire ?')) return;
 
-    const response = await apiDelete(`/annees-scolaires/${id}`);
+    const response = await apiDelete(`/annees/${id}`);
     if (response.success) {
       toast({ title: 'Année supprimée' });
       fetchAnnees();
@@ -131,7 +131,7 @@ export default function AdminAnneesScolaires() {
   };
 
   const handleActivate = async (id: string) => {
-    const response = await apiPatch(`/annees-scolaires/${id}/activer`);
+    const response = await apiPatch(`/annees/${id}/activate`);
     if (response.success) {
       toast({ title: 'Année activée', description: 'Cette année est maintenant l\'année scolaire active.' });
       fetchAnnees();
