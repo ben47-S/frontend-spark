@@ -62,8 +62,9 @@ export default function AdminAnneesScolaires() {
     setSubmitting(true);
 
     try {
+      const libelle = `${new Date(formData.dateDebut).getFullYear()}-${new Date(formData.dateFin).getFullYear()}`;
       const payload = {
-        ...formData,
+        libelle,
         dateDebut: new Date(formData.dateDebut).toISOString(),
         dateFin: new Date(formData.dateFin).toISOString(),
         dateOuvertureInscriptions: new Date(formData.dateOuvertureInscriptions).toISOString(),
@@ -182,13 +183,15 @@ export default function AdminAnneesScolaires() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="libelle">Libellé</Label>
+                    <Label htmlFor="libelle">Libellé (généré automatiquement)</Label>
                     <Input
                       id="libelle"
-                      placeholder="2024-2025"
-                      value={formData.libelle}
-                      onChange={(e) => setFormData({ ...formData, libelle: e.target.value })}
-                      required
+                      placeholder="Sélectionnez les dates"
+                      value={formData.dateDebut && formData.dateFin 
+                        ? `${new Date(formData.dateDebut).getFullYear()}-${new Date(formData.dateFin).getFullYear()}`
+                        : ''}
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -289,8 +292,8 @@ export default function AdminAnneesScolaires() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {annee.estActive ? (
-                          <Badge className="bg-green-100 text-green-700">
+                      {annee.estActive ? (
+                          <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">
                             <CheckCircle className="mr-1 h-3 w-3" />
                             Active
                           </Badge>
