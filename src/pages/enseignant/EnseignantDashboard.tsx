@@ -110,8 +110,24 @@ export default function EnseignantDashboard() {
     );
   }
 
-  const { enseignant, affectations, demandesEnAttente } = data!;
-  const affectationsActives = affectations.filter(a => a.anneeScolaire?.estActive);
+  // Some backends may omit arrays when empty; default to [] to avoid runtime crashes.
+  const enseignant = data?.enseignant;
+  const affectations = data?.affectations ?? [];
+  const demandesEnAttente = data?.demandesEnAttente ?? [];
+  const affectationsActives = affectations.filter((a) => a.anneeScolaire?.estActive);
+
+  if (!enseignant) {
+    return (
+      <DashboardLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Données enseignant manquantes dans la réponse API.
+          </AlertDescription>
+        </Alert>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
