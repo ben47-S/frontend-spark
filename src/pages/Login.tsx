@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { useAuth, getDefaultRoute } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -91,6 +92,34 @@ export default function Login() {
               )}
             </Button>
           </form>
+
+          {/* Lien d'inscription */}
+          <div className="mt-6 space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Pas encore de compte ?
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Button variant="outline" asChild className="w-full">
+                <Link to="/register">
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Étudiant
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="w-full">
+                <Link to="/register/enseignant">
+                  Enseignant
+                </Link>
+              </Button>
+            </div>
+          </div>
 
           {/* Comptes de test - à retirer en production */}
           <div className="mt-6 rounded-lg border bg-muted/50 p-4">
