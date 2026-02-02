@@ -30,12 +30,30 @@ export default function EnseignantDashboard() {
       setIsLoading(true);
       try {
         const response = await apiGet<EnseignantMeResponse>('/enseignants/me');
+        console.log('Réponse API enseignant:', response);
+        
         if (response.success && response.data) {
-          setData(response.data);
+          // Normaliser la réponse au cas où la structure est différente
+          const responseData = response.data as EnseignantMeResponse;
+          
+          // Vérifier si la réponse a la structure attendue
+          if (responseData.enseignant) {
+            setData(responseData);
+          } else {
+            // Si l'API renvoie directement l'enseignant sans wrapper
+            console.warn('Structure de réponse inattendue, tentative de normalisation');
+            setData({
+              enseignant: responseData as unknown as EnseignantMeResponse['enseignant'],
+              affectations: (responseData as any).affectations || [],
+              demandesEnAttente: (responseData as any).demandesEnAttente || []
+            });
+          }
         } else {
+          console.error('Erreur API:', response.error);
           setError(response.error?.message || 'Erreur lors du chargement');
         }
-      } catch {
+      } catch (err) {
+        console.error('Exception lors du chargement:', err);
         setError('Erreur de connexion au serveur');
       } finally {
         setIsLoading(false);
