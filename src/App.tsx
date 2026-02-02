@@ -22,6 +22,7 @@ import AdminCollegeDepartements from "./pages/admin-college/AdminCollegeDepartem
 import AdminCollegeMatieres from "./pages/admin-college/AdminCollegeMatieres";
 import AdminCollegeEnseignants from "./pages/admin-college/AdminCollegeEnseignants";
 import EnseignantDashboard from "./pages/enseignant/EnseignantDashboard";
+import EnseignantDemandes from "./pages/enseignant/EnseignantDemandes";
 import EtudiantDashboard from "./pages/etudiant/EtudiantDashboard";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 
@@ -135,6 +136,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
                   <EnseignantDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/enseignant/demandes"
+              element={
+                <ProtectedRoute allowedRoles={['ENSEIGNANT']}>
+                  <EnseignantDemandes />
                 </ProtectedRoute>
               }
             />

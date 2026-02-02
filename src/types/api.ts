@@ -230,3 +230,57 @@ export interface DashboardStats {
   matieres?: number;
   notes?: number;
 }
+
+// Enseignant types complets
+export type StatutDemande = 'EN_ATTENTE' | 'ACCEPTE' | 'REFUSE';
+
+export interface EnseignantProfil {
+  id: string;
+  userId: string;
+  nom: string;
+  prenom: string;
+  telephone?: string;
+  datePriseFonction?: string;
+  indice?: number;
+  matiereId?: string;
+  createdAt: string;
+  user?: User;
+  matiere?: Matiere;
+}
+
+export interface EnseignantDepartement {
+  id: string;
+  enseignantId: string;
+  departementId: string;
+  anneeScolaireId: string;
+  estResponsable: boolean;
+  createdAt: string;
+  departement?: Departement & {
+    college?: College;
+  };
+  anneeScolaire?: AnneeScolaire;
+}
+
+export interface EnseignantDemande {
+  id: string;
+  enseignantId: string;
+  departementId: string;
+  anneeScolaireId: string;
+  statut: StatutDemande;
+  dateCreation: string;
+  dateReponse?: string;
+  departement?: Departement & {
+    college?: College;
+  };
+  anneeScolaire?: AnneeScolaire;
+}
+
+export interface EnseignantMeResponse {
+  enseignant: EnseignantProfil;
+  affectations: EnseignantDepartement[];
+  demandesEnAttente: EnseignantDemande[];
+}
+
+export interface ReponseDemandeRequest {
+  statut: 'ACCEPTE' | 'REFUSE';
+}
