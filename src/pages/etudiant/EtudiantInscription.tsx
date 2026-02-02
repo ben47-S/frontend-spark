@@ -5,16 +5,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
 import { apiGet, apiPost } from '@/lib/api';
-import type { College, AnneeScolaire, Inscription, ApiResponse } from '@/types/api';
-import { Loader2, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import type { College, AnneeScolaire, Inscription } from '@/types/api';
+import { Loader2, CheckCircle, Clock, XCircle, AlertCircle, GraduationCap, Building, CalendarDays } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function EtudiantInscription() {
-  const { user } = useAuth();
   const [colleges, setColleges] = useState<College[]>([]);
   const [anneeScolaire, setAnneeScolaire] = useState<AnneeScolaire | null>(null);
   const [existingInscription, setExistingInscription] = useState<Inscription | null>(null);
+  const [allInscriptions, setAllInscriptions] = useState<Inscription[]>([]);
   const [selectedCollegeId, setSelectedCollegeId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +25,6 @@ export default function EtudiantInscription() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch colleges and active year in parallel
         const [collegesRes, anneeRes, inscriptionsRes] = await Promise.all([
           apiGet<College[]>('/colleges', { requiresAuth: false }),
           apiGet<AnneeScolaire>('/annees-scolaires/active'),
@@ -36,10 +35,13 @@ export default function EtudiantInscription() {
           setColleges(collegesRes.data);
         }
 
+        if (inscriptionsRes.success && inscriptionsRes.data) {
+          setAllInscriptions(inscriptionsRes.data);
+        }
+
         if (anneeRes.success && anneeRes.data) {
           setAnneeScolaire(anneeRes.data);
           
-          // Check if student already has inscription for this year
           if (inscriptionsRes.success && inscriptionsRes.data) {
             const existing = inscriptionsRes.data.find(
               (i) => i.anneeScolaireId === anneeRes.data.id
@@ -75,6 +77,7 @@ export default function EtudiantInscription() {
 
       if (response.success && response.data) {
         setExistingInscription(response.data);
+        setAllInscriptions(prev => [response.data!, ...prev]);
         setSuccess('Demande d\'inscription soumise avec succès !');
       } else {
         setError(response.error?.message || 'Erreur lors de la soumission');
@@ -90,24 +93,24 @@ export default function EtudiantInscription() {
     switch (statut) {
       case 'ACCEPTE':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="h-4 w-4" />
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400">
+            <CheckCircle className="mr-1 h-3 w-3" />
             Acceptée
-          </span>
+          </Badge>
         );
       case 'REFUSE':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 text-sm font-medium text-destructive">
-            <XCircle className="h-4 w-4" />
+          <Badge variant="destructive">
+            <XCircle className="mr-1 h-3 w-3" />
             Refusée
-          </span>
+          </Badge>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-            <Clock className="h-4 w-4" />
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400">
+            <Clock className="mr-1 h-3 w-3" />
             En attente
-          </span>
+          </Badge>
         );
     }
   };
@@ -122,32 +125,40 @@ export default function EtudiantInscription() {
     );
   }
 
+  const pastInscriptions = allInscriptions.filter(
+    i => i.anneeScolaireId !== anneeScolaire?.id
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inscription</h1>
-          <p className="text-muted-foreground">
-            Gérez votre inscription pour l'année scolaire
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+            <GraduationCap className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Inscription</h1>
+            <p className="text-muted-foreground">
+              Gérez votre inscription pour l'année scolaire en cours
+            </p>
+          </div>
         </div>
 
         {/* Current year info */}
         {anneeScolaire && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Année scolaire active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <span className="text-lg font-bold text-primary">{anneeScolaire.libelle}</span>
-                </div>
-                <div className="text-sm text-muted-foreground">
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <CalendarDays className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Année scolaire active</p>
+                <p className="text-2xl font-bold text-primary">{anneeScolaire.libelle}</p>
+                <p className="text-sm text-muted-foreground">
                   Du {new Date(anneeScolaire.dateDebut).toLocaleDateString('fr-FR')} au{' '}
                   {new Date(anneeScolaire.dateFin).toLocaleDateString('fr-FR')}
-                </div>
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -157,7 +168,10 @@ export default function EtudiantInscription() {
         {existingInscription ? (
           <Card>
             <CardHeader>
-              <CardTitle>Votre demande d'inscription</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Votre demande d'inscription
+              </CardTitle>
               <CardDescription>
                 Statut de votre demande pour l'année {anneeScolaire?.libelle}
               </CardDescription>
@@ -175,21 +189,29 @@ export default function EtudiantInscription() {
 
               {existingInscription.statut === 'ACCEPTE' && existingInscription.salle && (
                 <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
-                  <p className="font-medium text-green-800 dark:text-green-400">
-                    Salle assignée : {existingInscription.salle.nom}
-                  </p>
-                  {existingInscription.salle.college && (
-                    <p className="text-sm text-green-700 dark:text-green-500">
-                      {existingInscription.salle.college.nom}
-                    </p>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="font-semibold text-green-800 dark:text-green-400">
+                        Inscription confirmée !
+                      </p>
+                      <p className="text-green-700 dark:text-green-500">
+                        Salle : <span className="font-medium">{existingInscription.salle.nom}</span>
+                      </p>
+                      {existingInscription.salle.college && (
+                        <p className="text-sm text-green-600 dark:text-green-500">
+                          {existingInscription.salle.college.nom}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
               {existingInscription.statut === 'EN_ATTENTE' && (
-                <Alert>
-                  <Clock className="h-4 w-4" />
-                  <AlertDescription>
+                <Alert className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20">
+                  <Clock className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800 dark:text-yellow-400">
                     Votre demande est en cours d'examen par l'administration. 
                     Vous serez notifié dès qu'une décision sera prise.
                   </AlertDescription>
@@ -210,7 +232,10 @@ export default function EtudiantInscription() {
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Nouvelle demande d'inscription</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Nouvelle demande d'inscription
+              </CardTitle>
               <CardDescription>
                 Soumettez une demande d'inscription pour l'année {anneeScolaire?.libelle}
               </CardDescription>
@@ -242,31 +267,66 @@ export default function EtudiantInscription() {
                   <div className="space-y-2">
                     <Label htmlFor="college">Collège souhaité</Label>
                     <Select value={selectedCollegeId} onValueChange={setSelectedCollegeId}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Sélectionnez un collège" />
                       </SelectTrigger>
                       <SelectContent>
                         {colleges.map((college) => (
                           <SelectItem key={college.id} value={college.id}>
-                            {college.nom}
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              {college.nom}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <Button type="submit" disabled={!selectedCollegeId || isSubmitting}>
+                  <Button type="submit" className="w-full" disabled={!selectedCollegeId || isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Envoi en cours...
                       </>
                     ) : (
-                      'Soumettre la demande'
+                      <>
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Soumettre la demande
+                      </>
                     )}
                   </Button>
                 </form>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Past inscriptions */}
+        {pastInscriptions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Historique des inscriptions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {pastInscriptions.map((inscription) => (
+                  <div
+                    key={inscription.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{inscription.anneeScolaire?.libelle}</p>
+                      {inscription.salle && (
+                        <p className="text-sm text-muted-foreground">
+                          {inscription.salle.nom} - {inscription.salle.college?.nom}
+                        </p>
+                      )}
+                    </div>
+                    {getStatusBadge(inscription.statut)}
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
